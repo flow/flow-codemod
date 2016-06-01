@@ -76,5 +76,5 @@ Files that fail to parse will not be transformed, unfortunately.
 2. The Flow and Babel 5 parsers sometimes disagree on the position of expressions
 due to tab expansion. If certain type annotations fail to convert even when the
 files are successfully parsed - in particular, if other annotations within the
-same file convert successfully - try converting tabs to spaces and rerunning the
+same file convert successfully - try [converting tabs to spaces](http://i.imgur.com/qx2VUgo.gif) and rerunning the
 transform.
