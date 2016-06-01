@@ -58,7 +58,7 @@ previous behavior.
 
 *	Running the transform:
 
-	Run the transform with the following jscodeshift command line:
+	Run the transform with the following `jscodeshift` command line:
 
 	```
 	jscodeshift
@@ -68,7 +68,7 @@ previous behavior.
 		--extensions=js,flow
 	```
 
-##### Known Issues
+##### KNOWN ISSUES
 
 1. jscodeshift uses currently uses Babel 5, which fails to parse certain JS idioms.
 Files that fail to parse will not be transformed, unfortunately.
