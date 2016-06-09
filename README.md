@@ -14,7 +14,7 @@ Flowified JS code.
 
 ### Included Scripts
 
-The following codemods and docs can be found in the `transforms` directory.
+The following codemods can be found under the `transforms` directory:
 
 #### `strict-type-args`
 
@@ -31,5 +31,4 @@ let map: Map = ...
 let map: Map<any, any> = ...
 ```
 
-`any` is used for all inserted type arguments, duplicating the implicit
-previous behavior.
+This prepares code for an upcoming change to strict type argument processing. For instructions and more info, see documentation in the transform subdirectory.
