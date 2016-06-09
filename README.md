@@ -12,6 +12,11 @@ Flowified JS code.
 	(but note that individual transforms may require additional options, as documented)
   * Use the `-d` option for a dry-run and use `-p` to print the output for comparison
 
+##### KNOWN ISSUES
+
+* jscodeshift uses currently uses Babel 5, which fails to parse certain JS idioms.
+Files that fail to parse will not be transformed, unfortunately.
+
 ### Included Scripts
 
 The following codemods can be found under the `transforms` directory:
