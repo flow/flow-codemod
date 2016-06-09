@@ -14,7 +14,7 @@ Flowified JS code.
 
 ##### KNOWN ISSUES
 
-* jscodeshift uses currently uses Babel 5, which fails to parse certain JS idioms.
+* jscodeshift currently uses Babel 5, which fails to parse certain JS idioms.
 Files that fail to parse will not be transformed, unfortunately.
 
 ### Included Scripts
