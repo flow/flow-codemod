@@ -79,7 +79,7 @@ let map: Map<any, any> = ...
 
 ###### KNOWN ISSUES
 
-1. jscodeshift uses currently uses Babel 5, which fails to parse certain JS idioms.
+1. jscodeshift currently uses Babel 5, which fails to parse certain JS idioms.
 Files that fail to parse will not be transformed, unfortunately.
 
 2. The Flow and Babel 5 parsers sometimes disagree on the position of expressions
