@@ -100,7 +100,7 @@ In the example we started with, `set`’s type is obviously `Set<string>`, and s
 
 ##### Use `*`
 
-In cases where it’s either unclear what the type argument “should” be, or inconvenient to express it, a second option is to use *. This tells Flow to use whatever type has been inferred from context - for example, using `Set<*>` above will give you exactly the same type errors as `Set<string>`.
+In cases where it’s either unclear what the type argument “should” be, or inconvenient to express it, a second option is to use `*`. This tells Flow to use whatever type has been inferred from context - for example, using `Set<*>` above will give you exactly the same type errors as `Set<string>`.
 
 ##### Use `any`
 
