@@ -11,28 +11,59 @@
  *
  * See ../README.md for instructions.
  *
- * 
+ * @flow
  */
 
 'use-strict';
 
 // minimal API type info in lieu of full libdef
 //
+interface Collection {
+  find(type: Object, filter?: (node: Object) => boolean): Collection;
+  filter(callback: (node: Object) => boolean): Collection;
+  forEach(callback: (node: Object) => void): Collection;
+  replaceWith: (node: Object) => Collection;
+  toSource(options?: Object): string;
+}
 
-// extract base filename from given path
+type JSCodeShift = {
+  (source: Object | Array<Object> | string): Collection,
+  // node types
+  GenericTypeAnnotation: Object,
+  // builders
+  genericTypeAnnotation: () => Object,
+  typeParameterInstantiation: (args: Array<Object>) => Object,
+  anyTypeAnnotation: () => Object,
+}
 
+type Options = { [key: string]: string };
+
+type Transform = (
+  fileInfo: { path: string, source: string },
+  api: { jscodeshift: JSCodeShift, stats: (stat: string) => void },
+  options: Options,
+) => ?string;
 
 // loaded error info
-const getFileName = path => path.replace(/^.*[\\\/]/, '');
+type Info = { path: string, start: number, end: number, arity: number };
+
+// accessors for loaded errors
+type ErrorAccessors = {
+  getErrors: (file: string) => Array<Info>,
+  hasErrors: (file: string) => boolean,
+};
+
+// extract base filename from given path
+const getFileName = path => path.replace(/^.*[\\\/]/, '')
 
 // load arity errors from given file (once per worker), return accessors
 //
+const loadArityErrors: (options: Options) => ErrorAccessors = function() {
 
-
-// accessors for loaded errors
-const loadArityErrors = function () {
-
-  let lastErrorFileLoad = null;
+  let lastErrorFileLoad: ?{
+    errorFile: string,
+    accessors: ErrorAccessors,
+  } = null;
 
   const re = /Application of polymorphic type needs <list of (\d+)/;
 
@@ -42,26 +73,26 @@ const loadArityErrors = function () {
       path: messages[0].path,
       start: parseInt(messages[0].loc.start.offset, 10),
       end: parseInt(messages[0].loc.end.offset, 10),
-      arity: match[1]
+      arity: match[1],
     } : null;
   }
 
-  return function (options) {
+  return function(options) {
     const errorFile = options.errors;
 
     if (!errorFile) {
       console.log("no error file specified");
-      return { getErrors: file => [], hasErrors: file => false };
+      return { getErrors: (file) => [], hasErrors: (file) => false };
     }
 
     if (lastErrorFileLoad && lastErrorFileLoad.errorFile == errorFile) {
       return lastErrorFileLoad.accessors;
     }
 
-    const arityErrors = new Map();
+    const arityErrors: Map<string, Array<Info>> = new Map();
 
-    const getErrors = file => arityErrors.get(file) || [];
-    const hasErrors = file => arityErrors.has(file);
+    const getErrors = (file) => arityErrors.get(file) || [];
+    const hasErrors = (file) => arityErrors.has(file);
 
     function addArityError(info) {
       const file = getFileName(info.path);
@@ -80,20 +111,20 @@ const loadArityErrors = function () {
           addArityError(info);
         }
       }
-      console.log(`worker: loaded ${ loaded } arity errors (of ${ flowErrors.errors.length } total) from ${ errorFile }`);
+      console.log(`worker: loaded ${loaded} arity errors (of ${flowErrors.errors.length} total) from ${errorFile}`);
     } catch (err) {
-      console.log(`worker: exception [${ err }] while loading '${ errorFile }', ${ loaded } errors loaded`);
+      console.log(`worker: exception [${err}] while loading '${errorFile}', ${loaded} errors loaded`);
     }
 
     const accessors = { getErrors, hasErrors };
     lastErrorFileLoad = { errorFile, accessors };
     return accessors;
-  };
+  }
 }();
 
 // transform
 //
-const transform = function (file, api, options) {
+const transform: Transform = function(file, api, options) {
 
   const { jscodeshift: j, stats } = api;
   const fileName = getFileName(file.path);
@@ -106,7 +137,7 @@ const transform = function (file, api, options) {
       case 'Identifier':
         return id.name;
       case 'QualifiedTypeIdentifier':
-        return `${ id.qualification.name }.${ id.id.name }`;
+        return `${id.qualification.name}.${id.id.name}`;
       default:
         return null;
     }
@@ -117,11 +148,11 @@ const transform = function (file, api, options) {
   // 1. no type args are already specified
   // 2. the expr is the source of an arity error loaded with `--errors`
   //
-  function process(annoPath) {
+  function process(annoPath):boolean {
     const { id, typeParameters, start, end } = annoPath.value;
     if (typeParameters) return false;
 
-    const name = getName(id);
+    const name: ?string = getName(id);
     if (!name) return false;
 
     for (const info of getErrors(fileName)) {
@@ -139,7 +170,9 @@ const transform = function (file, api, options) {
         for (let i = 0; i < info.arity; i++) {
           params.push(j.anyTypeAnnotation());
         }
-        const withParams = j.genericTypeAnnotation(id, j.typeParameterInstantiation(params));
+        const withParams = j.genericTypeAnnotation(id,
+          j.typeParameterInstantiation(params)
+        );
         j(annoPath).replaceWith(withParams);
 
         return true;
@@ -152,7 +185,7 @@ const transform = function (file, api, options) {
   // true if annotation expr is *not* part of a typeof expression.
   // we need this to bypass conversions in `typeof Foo` exprs
   // (there `Foo` is a value expr, but it's parsed as an annotation)
-  function notTypeOf(annoPath) {
+  function notTypeOf(annoPath):boolean {
     let path = annoPath;
     while (path = path.parent) {
       if (path.value && path.value.type == 'TypeofTypeAnnotation') {
@@ -164,16 +197,22 @@ const transform = function (file, api, options) {
 
   // main
   //
-  if (file.source.indexOf('@generated') == -1 && (fileName.endsWith('.js.flow') || file.source.indexOf('@flow') >= 0) && hasErrors(fileName)) {
+  if (file.source.indexOf('@generated') == -1 &&
+      (fileName.endsWith('.js.flow') || file.source.indexOf('@flow') >= 0)
+      && hasErrors(fileName)) {
     let processed = 0;
     let root = j(file.source);
-    root.find(j.GenericTypeAnnotation).filter(notTypeOf).forEach(anno => {
-      if (process(anno)) processed++;
-    });
+    root.find(j.GenericTypeAnnotation).
+      filter(notTypeOf).
+      forEach((anno) => {
+        if (process(anno))
+          processed++;
+      }
+    );
     return processed > 0 ? root.toSource() : null;
   } else {
     return null;
   }
-};
+}
 
 module.exports = transform;
