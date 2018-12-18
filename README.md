@@ -37,3 +37,7 @@ let map: Map<any, any> = ...
 ```
 
 This prepares code for an upcoming change to strict type argument processing. For instructions and more info, see documentation in the transform subdirectory.
+
+## License
+
+flow-codemod is BSD licensed, as found in the [LICENSE](LICENSE) file. We also provide an [additional patent grant](PATENTS).
