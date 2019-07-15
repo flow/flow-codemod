@@ -40,4 +40,4 @@ This prepares code for an upcoming change to strict type argument processing. Fo
 
 ## License
 
-flow-codemod is BSD licensed, as found in the [LICENSE](LICENSE) file. We also provide an [additional patent grant](PATENTS).
+flow-codemod is MIT licensed, as found in the [LICENSE](LICENSE) file.
